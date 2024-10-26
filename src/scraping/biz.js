@@ -26,10 +26,11 @@ async function scrapeWebsite() {
           const dateUTC = post.querySelector(".desktop > .dateTime")?.getAttribute("data-utc") || "";
           let postLink = post.querySelector(".postInfo > .postNum > a")?.getAttribute("href") || "";
           const postMessage = post.querySelector(".postMessage")?.textContent || "No message";
+          const postFileText = post.querySelector(".post > .file > .fileText > a")?.innerText || "";
 
           postLink = postLink ? `https://boards.4chan.org/biz/${postLink}` : "";
 
-          return { postId, userId, dateTime, dateUTC, postLink, postMessage };
+          return { postId, userId, dateTime, dateUTC, postLink, postMessage, postFileText };
         });
 
         return { posts };
@@ -66,6 +67,11 @@ const lookThroughThreads = async (board) => {
     "free money",
   ];
 
+  const patterns = [
+    { regex: /0x[a-fA-F0-9]{40}/g, label: "ETH-adrress" }, // Pattern 1 with label
+    { regex: /\b[a-zA-Z0-9]{44}\b/g, label: "SOL-address" }, // Pattern 2 with label
+  ];
+
   const outputFile = "src/data/biz.json";
 
   const blockedData = JSON.parse(fs.readFileSync(outputFile, "utf-8"));
@@ -73,15 +79,26 @@ const lookThroughThreads = async (board) => {
 
   if (blockedData?.posts) blockPostId = blockedData.posts.map((post) => post.postId).slice(-50);
 
-  console.log(blockPostId);
-
   const results = board.threads
     .map((thread) => {
       const matchingPosts = thread.posts
         .map((post) => {
-          const matchedKeywords = keywords.filter((keyword) => post.postMessage.toLowerCase().includes(keyword));
+          const matchedKeywords = keywords.filter(
+            (keyword) =>
+              post.postMessage.toLowerCase().includes(keyword) || post.postFileText.toLowerCase().includes(keyword)
+          );
 
-          return matchedKeywords.length > 0 ? { ...post, matchedKeywords } : null;
+          const matchedPatterns = patterns
+            .map(({ regex, label }) => {
+              const postMatches = post.postMessage.match(regex) || [];
+              const fileMatches = post.postFileText.match(regex) || [];
+              return postMatches.length > 0 || fileMatches.length > 0 ? label : null;
+            })
+            .filter(Boolean);
+
+          return matchedKeywords.length > 0 || matchedPatterns.length > 0
+            ? { ...post, matchedKeywords, matchedPatterns }
+            : null;
         })
         .filter(Boolean);
 
@@ -96,6 +113,8 @@ const lookThroughThreads = async (board) => {
     .filter(Boolean);
 
   const newBlockedPosts = results.flatMap((thread) => thread.posts).sort((a, b) => a.dateUTC - b.dateUTC);
+
+  console.log(newBlockedPosts);
 
   appendToJsonFile(outputFile, newBlockedPosts);
 };
@@ -124,8 +143,8 @@ const appendToJsonFile = async (outputFile, newBlockedPosts) => {
 
 function getRandomDelay() {
   // Generate a random delay between 2 and 4 minutes (in milliseconds)
-  const min = 2 * 60 * 1000; // 2 minutes in milliseconds
-  const max = 4 * 60 * 1000; // 4 minutes in milliseconds
+  const min = 10 * 1000; // 2 minutes in milliseconds
+  const max = 15 * 1000; // 4 minutes in milliseconds
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 

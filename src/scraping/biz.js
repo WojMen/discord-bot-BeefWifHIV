@@ -143,8 +143,8 @@ const appendToJsonFile = async (outputFile, newBlockedPosts) => {
 
 function getRandomDelay() {
   // Generate a random delay between 2 and 4 minutes (in milliseconds)
-  const min = 10 * 1000; // 2 minutes in milliseconds
-  const max = 15 * 1000; // 4 minutes in milliseconds
+  const min = 7 * 1000; // 2 minutes in milliseconds
+  const max = 12 * 1000; // 4 minutes in milliseconds
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 

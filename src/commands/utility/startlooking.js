@@ -37,10 +37,6 @@ export default {
   },
 };
 
-// const sleep = (ms) => {
-//   return new Promise((resolve) => setTimeout(resolve, ms));
-// };
-
 const stopLooking = async (interaction) => {
   const recentMessages = await interaction.channel.messages.fetch({ limit: 1 });
 

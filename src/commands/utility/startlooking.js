@@ -13,7 +13,7 @@ export default {
 
     try {
       let counter = -1;
-      let lastMessageDateUTC = 1729975467;
+      let lastMessageDateUTC = loadLastMessageDateUTC();
 
       while (await stopLooking(interaction)) {
         // await interaction.channel.send("I'm still looking...");
@@ -72,9 +72,13 @@ const potentialPosts = async (lastMessageDateUTC, interaction) => {
   for (const post of newPosts) {
     lastMessageDateUTC = post.dateUTC > lastMessageDateUTC ? post.dateUTC : lastMessageDateUTC;
 
-    post.matchedKeywords.forEach((element) => {
-      post.postMessage = post.postMessage?.toLowerCase().replace(element, `__**${element}**__`);
-      post.postFileText = post.postFileText?.toLowerCase().replace(element, `__**${element}**__`);
+    post.matchedPatterns = post.matchedPatterns?.sort((a, b) => b.length - a.length);
+
+    post.matchedKeywords.forEach((pattern) => {
+      const regex = new RegExp(`(?<!\\*)(${pattern})(?!\\*)`, "gi");
+
+      post.postMessage = post.postMessage?.replace(regex, "__**$1**__");
+      post.postFileText = post.postFileText?.replace(regex, "__**$1**__");
     });
 
     let messagePart = "";
@@ -102,5 +106,18 @@ const potentialPosts = async (lastMessageDateUTC, interaction) => {
   console.log("Sending message content:", messageContent);
   if (messageContent.trim().length > 0) await interaction.channel.send(messageContent);
 
+  updateLastMessageDateUTC(lastMessageDateUTC);
+
   return lastMessageDateUTC;
+};
+
+const updateLastMessageDateUTC = (lastMessageDateUTC) => {
+  const data = JSON.parse(fs.readFileSync("src/data/config.json", "utf-8"));
+  data.biz.lastMessageDateUTC = lastMessageDateUTC;
+  fs.writeFileSync("src/data/config.json", JSON.stringify(data, null, 2));
+};
+
+const loadLastMessageDateUTC = () => {
+  const data = JSON.parse(fs.readFileSync("src/data/config.json", "utf-8"));
+  return data.biz.lastMessageDateUTC;
 };

@@ -13,12 +13,12 @@ export default {
 
     try {
       let counter = -1;
-      let lastMessageDateUTC = 1729970833;
+      let lastMessageDateUTC = 1729975467;
 
       while (await stopLooking(interaction)) {
         // await interaction.channel.send("I'm still looking...");
 
-        if (counter % 60 === 0 || counter === -1) {
+        if (counter % 15 === 0 || counter === -1) {
           console.log("Looking for new posts..." + new Date().toLocaleTimeString());
           lastMessageDateUTC = await potentialPosts(lastMessageDateUTC, interaction);
 
@@ -67,20 +67,24 @@ const potentialPosts = async (lastMessageDateUTC, interaction) => {
     return lastMessageDateUTC;
   }
 
-  await interaction.channel.send(`\n## --------------------------------------\n`);
+  await interaction.channel.send(`\n# --------------------------------------\n`);
 
   for (const post of newPosts) {
     lastMessageDateUTC = post.dateUTC > lastMessageDateUTC ? post.dateUTC : lastMessageDateUTC;
 
     post.matchedKeywords.forEach((element) => {
-      post.postMessage = post.postMessage.toLowerCase().replace(element, `__**${element}**__`);
+      post.postMessage = post.postMessage?.toLowerCase().replace(element, `__**${element}**__`);
+      post.postFileText = post.postFileText?.toLowerCase().replace(element, `__**${element}**__`);
     });
 
     let messagePart = "";
-    messagePart += `### New post detected, keywords: __${post.matchedKeywords.join(", ")}__\n`;
+    messagePart += `### New post detected\n`;
     messagePart += `--------------------------------------\n`;
+    if (post.matchedKeywords?.length > 0) messagePart += `**Keywords:** __${post.matchedKeywords.join(", ")}__\n`;
+    if (post.matchedPatterns?.length > 0) messagePart += `**Pattern:** __${post.matchedPatterns.join(", ")}__\n`;
     messagePart += `**Link:** <${post.postLink}>\n`;
     messagePart += `**Time:** ${post.dateTime}\n`;
+    if (post.postFileText) messagePart += `**FileText:** ${post.postFileText}\n`;
     messagePart += `**Message:** ${post.postMessage}\n`;
 
     // Check if adding the new message part would exceed the limit

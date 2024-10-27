@@ -3,7 +3,8 @@ import { SlashCommandBuilder } from "discord.js";
 import * as fs from "node:fs";
 import { sleep } from "../../common/time.js";
 
-const FILE_PATH = "src/data/config.json";
+const FILE_CONFIG = "src/data/config.json";
+const FILE_POSTS = "src/data/biz.json";
 
 export default {
   data: new SlashCommandBuilder()
@@ -64,10 +65,8 @@ const stopLooking = async (interaction) => {
   return result ? false : true;
 };
 
-const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
-  const outputFile = FILE_PATH;
-
-  const data = JSON.parse(fs.readFileSync(outputFile, "utf-8"));
+const potentialPosts = async (lastMessageDateUTC, interaction, loadingMessage) => {
+  const data = JSON.parse(fs.readFileSync(FILE_POSTS, "utf-8"));
 
   const newPosts = data.posts?.filter((post) => post.dateUTC > lastMessageDateUTC);
 
@@ -77,6 +76,8 @@ const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
   if (!newPosts || newPosts?.length === 0) {
     return lastMessageDateUTC;
   }
+
+  // Format the message content
 
   await interaction.channel.send(`\n# --------------------------------------\n`);
 
@@ -118,18 +119,17 @@ const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
   if (messageContent.trim().length > 0) await interaction.channel.send(messageContent);
 
   updateLastMessageDateUTC(lastMessageDateUTC);
-  await lastMessage.delete();
 
   return lastMessageDateUTC;
 };
 
 const updateLastMessageDateUTC = (lastMessageDateUTC) => {
-  const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
+  const data = JSON.parse(fs.readFileSync(FILE_CONFIG, "utf-8"));
   data.biz.lastMessageDateUTC = lastMessageDateUTC;
-  fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2));
+  fs.writeFileSync(FILE_CONFIG, JSON.stringify(data, null, 2));
 };
 
 const loadLastMessageDateUTC = () => {
-  const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
+  const data = JSON.parse(fs.readFileSync(FILE_CONFIG, "utf-8"));
   return data.biz.lastMessageDateUTC;
 };

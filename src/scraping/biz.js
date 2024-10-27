@@ -10,7 +10,7 @@ async function scrapeWebsite() {
 
   try {
     await page.goto("https://boards.4chan.org/biz/");
-    await page.waitForSelector("#delform > .board", { timeout: 5000 });
+    await page.waitForSelector("#delform > .board", { timeout: 10000 });
 
     const content = await page.evaluate(() => {
       const boardElement = document.querySelector("#delform > .board");

@@ -69,12 +69,12 @@ const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
 
   const data = JSON.parse(fs.readFileSync(outputFile, "utf-8"));
 
-  const newPosts = data.posts.filter((post) => post.dateUTC > lastMessageDateUTC);
+  const newPosts = data.posts?.filter((post) => post.dateUTC > lastMessageDateUTC);
 
   let messageContent = "";
   const maxLength = 2000;
 
-  if (newPosts.length === 0) {
+  if (!newPosts || newPosts?.length === 0) {
     return lastMessageDateUTC;
   }
 

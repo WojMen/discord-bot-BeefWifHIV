@@ -14,8 +14,7 @@ export default {
   async execute(interaction) {
     await interaction.reply("Started looking! I will send messages from biz until you say `stop`.");
 
-    let dotCount = 0;
-    let loadingMessage = null;
+    let lastMessage = null;
     let counter = -1;
 
     try {
@@ -25,21 +24,12 @@ export default {
       while (await stopLooking(interaction)) {
         if (counter % 15 === 0 || counter === -1) {
           console.log("Looking for new posts..." + new Date().toLocaleTimeString());
-          lastMessageDateUTC = await potentialPosts(lastMessageDateUTC, interaction, loadingMessage);
-        }
-
-        if (counter % 300 === 0) {
-          if (loadingMessage && !loadingMessage.deleted) {
-            dotCount = (dotCount + 2) % 5;
-            const dots = ".".repeat(dotCount);
-            await loadingMessage.edit(`Loading.${dots}  last update: ${new Date().toLocaleTimeString()}`);
-          } else {
-            loadingMessage = await interaction.channel.send(`Loading  last update: ${new Date().toLocaleTimeString()}`);
-            dotCount = 1;
-          }
+          [lastMessageDateUTC, lastMessage] = await potentialPosts(lastMessageDateUTC, interaction, lastMessage);
 
           counter = 0;
         }
+
+        // loadingMessage = await interaction.channel.send(`Loading  last update: ${new Date().toLocaleTimeString()}`);
 
         await sleep(1000);
         counter++;
@@ -65,7 +55,7 @@ const stopLooking = async (interaction) => {
   return result ? false : true;
 };
 
-const potentialPosts = async (lastMessageDateUTC, interaction, loadingMessage) => {
+const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
   const data = JSON.parse(fs.readFileSync(FILE_POSTS, "utf-8"));
 
   const newPosts = data.posts?.filter((post) => post.dateUTC > lastMessageDateUTC);
@@ -74,7 +64,15 @@ const potentialPosts = async (lastMessageDateUTC, interaction, loadingMessage) =
   const maxLength = 2000;
 
   if (!newPosts || newPosts?.length === 0) {
-    return lastMessageDateUTC;
+    if (!lastMessage) return [lastMessageDateUTC, null];
+
+    const messageLines = lastMessage.content.split("\n");
+    messageLines.pop();
+    const updatedTime = `Last updated: ${new Date().toLocaleTimeString()}`;
+    const newContent = `${messageLines.join("\n")}\n${updatedTime}`;
+    await lastMessage.edit(newContent);
+
+    return [lastMessageDateUTC, lastMessage];
   }
 
   // Format the message content
@@ -101,7 +99,7 @@ const potentialPosts = async (lastMessageDateUTC, interaction, loadingMessage) =
     messagePart += `**Link:** <${post.postLink}>\n`;
     messagePart += `**Time:** ${post.dateTime}\n`;
     if (post.postFileText) messagePart += `**FileText:** ${post.postFileText}\n`;
-    messagePart += `**Message:** ${post.postMessage}\n`;
+    messagePart += `**Message:** ${post.postMessage || ""}\n`;
 
     // Check if adding the new message part would exceed the limit
     if (messageContent.length + messagePart.length > maxLength) {
@@ -116,11 +114,12 @@ const potentialPosts = async (lastMessageDateUTC, interaction, loadingMessage) =
 
   // Send the entire message at once
   console.log("Sending message content:", messageContent);
-  if (messageContent.trim().length > 0) await interaction.channel.send(messageContent);
+  messageContent += `Last updated: ${new Date().toLocaleTimeString()}`;
+  lastMessage = await interaction.channel.send(messageContent);
 
   updateLastMessageDateUTC(lastMessageDateUTC);
 
-  return lastMessageDateUTC;
+  return [lastMessageDateUTC, lastMessage];
 };
 
 const updateLastMessageDateUTC = (lastMessageDateUTC) => {

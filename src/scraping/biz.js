@@ -1,14 +1,17 @@
 import * as fs from "node:fs";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import AdblockerPlugin from "puppeteer-extra-plugin-adblocker";
 
+puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
+puppeteer.use(StealthPlugin());
 puppeteer.use(StealthPlugin());
 
 const CONFIG_FILE_PATH = "./config.json";
 const FILE_POSTS_PATH = "src/data/biz.json";
 
 async function scrapeWebsite() {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: true, userDataDir: "./src/data/puppeteer_cache" });
   const page = await browser.newPage();
 
   try {

@@ -4,6 +4,9 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 puppeteer.use(StealthPlugin());
 
+const CONFIG_FILE_PATH = "./config.json";
+const FILE_POSTS_PATH = "src/data/biz.json";
+
 async function scrapeWebsite() {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
@@ -54,44 +57,34 @@ async function scrapeWebsite() {
 }
 
 const lookThroughThreads = async (board) => {
-  const keywords = [
-    "airdrop",
-    "wallet",
-    "address",
-    "addy",
-    "drop",
-    "giveaway",
-    " tme",
-    "tdotme",
-    " t me",
-    "free money",
-  ];
+  const config = await JSON.parse(fs.readFileSync(CONFIG_FILE_PATH, "utf-8"));
 
-  const patterns = [
-    { regex: /0x[a-fA-F0-9]{40}/g, label: "ETH-adrress" }, // Pattern 1 with label
-    { regex: /\b[a-zA-Z0-9]{44}\b/g, label: "SOL-address" }, // Pattern 2 with label
-  ];
+  const keyWords = config.biz.keyWords;
+  const patterns = config.biz.regexPatterns;
 
-  const outputFile = "src/data/biz.json";
-
-  const blockedData = JSON.parse(fs.readFileSync(outputFile, "utf-8"));
+  const blockedData = JSON.parse(fs.readFileSync(FILE_POSTS_PATH, "utf-8"));
   let blockPostId = [];
 
   if (blockedData?.posts) blockPostId = blockedData.posts.map((post) => post.postId).slice(-50);
+
+  //
+  // Look for matching keywords and patterns
+  //
 
   const results = board.threads
     .map((thread) => {
       const matchingPosts = thread.posts
         .map((post) => {
-          const matchedKeywords = keywords.filter(
+          const matchedKeywords = keyWords.filter(
             (keyword) =>
               post.postMessage.toLowerCase().includes(keyword) || post.postFileText.toLowerCase().includes(keyword)
           );
 
           const matchedPatterns = patterns
             .map(({ regex, label }) => {
-              const postMatches = post.postMessage.match(regex) || [];
-              const fileMatches = post.postFileText.match(regex) || [];
+              const regexT = new RegExp(regex, "g");
+              const postMatches = post.postMessage.match(regexT) || [];
+              const fileMatches = post.postFileText.match(regexT) || [];
               return postMatches.length > 0 || fileMatches.length > 0 ? label : null;
             })
             .filter(Boolean);
@@ -116,15 +109,15 @@ const lookThroughThreads = async (board) => {
 
   console.log(newBlockedPosts);
 
-  appendToJsonFile(outputFile, newBlockedPosts);
+  appendToJsonFile(newBlockedPosts);
 };
 
-const appendToJsonFile = async (outputFile, newBlockedPosts) => {
+const appendToJsonFile = async (newBlockedPosts) => {
   try {
     let data;
 
     try {
-      const fileContent = await fs.readFileSync(outputFile, "utf-8");
+      const fileContent = await fs.readFileSync(FILE_POSTS_PATH, "utf-8");
 
       data = fileContent.trim() ? JSON.parse(fileContent) : {};
 
@@ -135,16 +128,15 @@ const appendToJsonFile = async (outputFile, newBlockedPosts) => {
 
     data.posts.push(...newBlockedPosts);
 
-    await fs.writeFileSync(outputFile, JSON.stringify(data, null, 2), "utf-8");
+    await fs.writeFileSync(FILE_POSTS_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch (error) {
     console.error("Error appending to JSON file:", error);
   }
 };
 
 function getRandomDelay() {
-  // Generate a random delay between 2 and 4 minutes (in milliseconds)
-  const min = 7 * 1000; // 2 minutes in milliseconds
-  const max = 12 * 1000; // 4 minutes in milliseconds
+  const min = 7 * 1000;
+  const max = 12 * 1000;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 

@@ -1,0 +1,28 @@
+{
+  "biz": {
+    "lastMessageDateUTC": "1730043214",
+    "keyWords": [
+      "airdrop",
+      "wallet",
+      "address",
+      "addy",
+      "drop",
+      "giveaway",
+      " tme",
+      "tdotme",
+      " t me",
+      "free money",
+      " tg "
+    ],
+    "regexPatterns": [
+      {
+        "regex": "0x[a-fA-F0-9]{40}",
+        "label": "ETH-adrress"
+      },
+      {
+        "regex": "\\b[a-zA-Z0-9]{44}\\b",
+        "label": "SOL-address"
+      }
+    ]
+  }
+}

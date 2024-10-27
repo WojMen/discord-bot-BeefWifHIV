@@ -3,24 +3,39 @@ import { SlashCommandBuilder } from "discord.js";
 import * as fs from "node:fs";
 import { sleep } from "../../common/time.js";
 
+const FILE_PATH = "src/data/config.json";
+
 export default {
   data: new SlashCommandBuilder()
     .setName("startlooking")
-    .setDescription('Starts sending a message hour minute to this channel until "stop".'),
+    .setDescription('Starts sending a messages from biz to this channel until "stop".'),
 
   async execute(interaction) {
-    await interaction.reply("Started looking! I will send messages every hour until you say `stop`.");
+    await interaction.reply("Started looking! I will send messages from biz until you say `stop`.");
+
+    let dotCount = 0;
+    let loadingMessage = null;
+    let counter = -1;
 
     try {
-      let counter = -1;
-      let lastMessageDateUTC = loadLastMessageDateUTC();
+      // Load the last message date from the config file and set a default value of 5 minutes ago
+      let lastMessageDateUTC = loadLastMessageDateUTC() || Math.floor(new Date().getTime() / 1000) - 5 * 60;
 
       while (await stopLooking(interaction)) {
-        // await interaction.channel.send("I'm still looking...");
-
         if (counter % 15 === 0 || counter === -1) {
           console.log("Looking for new posts..." + new Date().toLocaleTimeString());
-          lastMessageDateUTC = await potentialPosts(lastMessageDateUTC, interaction);
+          lastMessageDateUTC = await potentialPosts(lastMessageDateUTC, interaction, loadingMessage);
+        }
+
+        if (counter % 300 === 0) {
+          if (loadingMessage && !loadingMessage.deleted) {
+            dotCount = (dotCount + 2) % 5;
+            const dots = ".".repeat(dotCount);
+            await loadingMessage.edit(`Loading.${dots}  last update: ${new Date().toLocaleTimeString()}`);
+          } else {
+            loadingMessage = await interaction.channel.send(`Loading  last update: ${new Date().toLocaleTimeString()}`);
+            dotCount = 1;
+          }
 
           counter = 0;
         }
@@ -49,8 +64,8 @@ const stopLooking = async (interaction) => {
   return result ? false : true;
 };
 
-const potentialPosts = async (lastMessageDateUTC, interaction) => {
-  const outputFile = "src/data/biz.json";
+const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
+  const outputFile = FILE_PATH;
 
   const data = JSON.parse(fs.readFileSync(outputFile, "utf-8"));
 
@@ -103,17 +118,18 @@ const potentialPosts = async (lastMessageDateUTC, interaction) => {
   if (messageContent.trim().length > 0) await interaction.channel.send(messageContent);
 
   updateLastMessageDateUTC(lastMessageDateUTC);
+  await lastMessage.delete();
 
   return lastMessageDateUTC;
 };
 
 const updateLastMessageDateUTC = (lastMessageDateUTC) => {
-  const data = JSON.parse(fs.readFileSync("src/data/config.json", "utf-8"));
+  const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
   data.biz.lastMessageDateUTC = lastMessageDateUTC;
-  fs.writeFileSync("src/data/config.json", JSON.stringify(data, null, 2));
+  fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2));
 };
 
 const loadLastMessageDateUTC = () => {
-  const data = JSON.parse(fs.readFileSync("src/data/config.json", "utf-8"));
+  const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
   return data.biz.lastMessageDateUTC;
 };

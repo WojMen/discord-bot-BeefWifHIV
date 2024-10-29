@@ -1,6 +1,6 @@
 {
   "biz": {
-    "lastMessageDateUTC": "1730217284",
+    "lastMessageDateUTC": "1730231027",
     "keyWords": [
       "airdrop",
       "wallet",
@@ -13,6 +13,9 @@
       " t me",
       "free money",
       " tg "
+    ],
+    "blockedWords": [
+      "@chetaudif"
     ],
     "regexPatterns": [
       {

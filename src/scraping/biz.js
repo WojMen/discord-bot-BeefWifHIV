@@ -63,6 +63,7 @@ const lookThroughThreads = async (board) => {
 
   const keyWords = config.biz.keyWords;
   const patterns = config.biz.regexPatterns;
+  const blockekWords = config.biz.blockedWords;
 
   const blockedData = JSON.parse(fs.readFileSync(FILE_POSTS_PATH, "utf-8"));
   let blockPostId = [];
@@ -77,6 +78,8 @@ const lookThroughThreads = async (board) => {
     .map((thread) => {
       const matchingPosts = thread.posts
         .map((post) => {
+          if (blockekWords.some((word) => post.postMessage.toLowerCase().includes(word))) return null;
+
           const matchedKeywords = keyWords.filter(
             (keyword) =>
               post.postMessage.toLowerCase().includes(keyword) || post.postFileText.toLowerCase().includes(keyword)

@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "deno run --allow-all --watch ./src/app.js",
-    "deploy-dev": "deno run --allow-all ./src/deploy-commands.js",
+    "deploy-commands-dev": "deno run --allow-all ./src/deploy-commands-dev.js",
+    "deploy-commands-main": "deno run --allow-all ./src/deploy-commands-main.js",
     "scrape": "deno run --allow-all --watch ./src/scraping/biz.js"
   },
   "devDependencies": {

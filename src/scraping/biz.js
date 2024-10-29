@@ -5,13 +5,12 @@ import AdblockerPlugin from "puppeteer-extra-plugin-adblocker";
 
 puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
 puppeteer.use(StealthPlugin());
-puppeteer.use(StealthPlugin());
 
 const CONFIG_FILE_PATH = "./config.json";
 const FILE_POSTS_PATH = "src/data/biz.json";
 
 async function scrapeWebsite() {
-  const browser = await puppeteer.launch({ headless: true, userDataDir: "./src/data/puppeteer_cache" });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
@@ -138,8 +137,8 @@ const appendToJsonFile = async (newBlockedPosts) => {
 };
 
 function getRandomDelay() {
-  const min = 7 * 1000;
-  const max = 12 * 1000;
+  const min = 10 * 1000;
+  const max = 16 * 1000;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 

@@ -22,7 +22,7 @@ export default {
       let lastMessageDateUTC = loadLastMessageDateUTC();
 
       while (await stopLooking(interaction)) {
-        if (counter % 15 === 0 || counter === -1) {
+        if (counter % 20 === 0 || counter === -1) {
           console.log("Looking for new posts..." + new Date().toLocaleTimeString());
           [lastMessageDateUTC, lastMessage] = await potentialPosts(lastMessageDateUTC, interaction, lastMessage);
 
@@ -113,13 +113,23 @@ const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
     // Check if adding the new message part would exceed the limit
     if (messageContent.length + messagePart.length > maxLength) {
       // Send the current message content and reset
-      console.log("Sending message part:", messagePart);
-      await interaction.channel.send(messageContent);
-      messageContent = "";
+
+      if (messageContent.length > 0) {
+        console.log("Sending message part:", messagePart);
+        await interaction.channel.send(messageContent);
+        messageContent = "";
+      } else {
+        console.log("Sending message shorten part:", messagePart);
+        const trimmedMessage = messagePart.substring(0, maxLength);
+        await interaction.channel.send(trimmedMessage);
+        messagePart = "";
+      }
     } else {
       messageContent += messagePart;
     }
   }
+
+  if (messageContent.length === 0) return [lastMessageDateUTC, null];
 
   console.log("Sending message content:", messageContent);
   messageContent += `Last updated: ${new Date().toLocaleTimeString()}`;

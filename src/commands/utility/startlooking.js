@@ -61,7 +61,7 @@ const potentialPosts = async (lastMessageDateUTC, interaction, lastMessage) => {
   const newPosts = data.posts?.filter((post) => post.dateUTC > lastMessageDateUTC);
 
   let messageContent = "";
-  const maxLength = 2000;
+  const maxLength = 1975;
 
   // Check if there are no new posts
   // update user with last updated time

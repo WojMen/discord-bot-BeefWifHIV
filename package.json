@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node dist/app.js",
-    "build": "tsc"
+    "build": "tsc",
+    "deploy-commands": "tsx src/deploy-commands.ts",
+    "deploy-commands-dev": "tsx src/deploy-commands-dev.ts"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

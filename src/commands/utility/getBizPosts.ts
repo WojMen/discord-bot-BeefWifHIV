@@ -27,7 +27,7 @@ export default {
       let minPostTime = getUnixTimeMinusSeconds(seconds || 900);
 
       while (await stopLooking(interaction)) {
-        if (counter % 20 === 0 || counter === -1) {
+        if (counter % 16 === 0 || counter === -1) {
           console.log("Looking for new posts..." + new Date().toLocaleTimeString());
 
           [postTime, lastMessage] = await sendAavaiblePosts(minPostTime, interaction, lastMessage);
@@ -73,7 +73,16 @@ async function sendAavaiblePosts(
 ): Promise<[number, Message | null]> {
   const newPosts: Post[] = await getNewFilteredPosts(seconds);
 
-  if (newPosts.length === 0) return [seconds, lastMessage];
+  if (newPosts.length === 0) {
+    if (!lastMessage) return [seconds, lastMessage];
+
+    const messageLines = lastMessage.content.split("\n");
+    messageLines.pop();
+    const updatedTime = `Last updated: ${new Date().toLocaleTimeString()}`;
+    const newContent = `${messageLines.join("\n")}\n${updatedTime}`;
+    await lastMessage.edit(newContent);
+    return [seconds, lastMessage];
+  }
 
   const maxLength = 1975;
   let messageContent = "";

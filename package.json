@@ -4,6 +4,7 @@
   "main": "./src/app.js",
   "license": "MIT",
   "type": "module",
+  "target": "ESNext",
   "scripts": {
     "dev": "deno run --allow-all --watch ./src/app.js",
     "deploy-commands-dev": "deno run --allow-all ./src/deploy-commands-dev.js",
@@ -11,6 +12,7 @@
     "scrape": "deno run --allow-all --watch ./src/scraping/biz.js"
   },
   "devDependencies": {
+    "@types/he": "^1.2.3",
     "eslint": "^9.13.0"
   },
   "dependencies": {

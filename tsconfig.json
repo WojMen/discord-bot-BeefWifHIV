@@ -1,16 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
+    /* Target and Module */
+    "target": "ESNext", // Uses the latest JS features, but compatible with Node.js 16+
+    "module": "NodeNext", // Enables native ESM support
+    "moduleResolution": "NodeNext", // Ensures compatibility with Node's ESM resolution
+    /* Node.js Library and Environment Support */
+    "lib": ["ESNext"],
+
+    /* Strict Type Checking */
     "strict": true,
-    // "skipLibCheck": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "noEmit": true,
-    // "types": ["deno.ns"],
-    "allowImportingTsExtensions": true,
-    "typeRoots": ["./node_modules/@types", "./node_modules/@discordjs/typings"]
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Support for ts-node */
+    "esModuleInterop": true, // Enables compatibility with CommonJS modules
+    "skipLibCheck": true, // Skip checking of library files for faster builds
+
+    /* Source and Output Management */
+    "outDir": "dist", // Directory for compiled JavaScript files
+    "rootDir": "src" // Root directory of TypeScript files
   },
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "include": ["src/**/*.ts"], // Includes all TypeScript files in src
+  "exclude": ["node_modules", "dist"] // Exclude these directories
 }

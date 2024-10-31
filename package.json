@@ -1,27 +1,25 @@
 {
-  "name": "BeefWifHIV",
-  "version": "1.0.0",
-  "main": "./src/app.js",
-  "license": "MIT",
+  "name": "beefwifhiv",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
-  "target": "ESNext",
   "scripts": {
-    "dev": "deno run --allow-all --watch ./src/app.js",
-    "deploy-commands-dev": "deno run --allow-all ./src/deploy-commands-dev.js",
-    "deploy-commands-main": "deno run --allow-all ./src/deploy-commands-main.js",
-    "scrape": "deno run --allow-all --watch ./src/scraping/biz.js"
+    "dev": "nodemon",
+    "start": "node dist/app.js",
+    "build": "tsc"
   },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
     "@types/he": "^1.2.3",
-    "eslint": "^9.13.0"
+    "nodemon": "^3.1.7",
+    "tsx": "^4.19.2",
+    "typescript": "~5.6.2"
   },
   "dependencies": {
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0",
     "he": "^1.2.0",
-    "puppeteer": "^23.6.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-adblocker": "^2.13.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "path": "^0.12.7"
   }
 }

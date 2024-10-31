@@ -1,5 +1,6 @@
 import he from "he";
-import { Config, Pattern, Post, Page, Thread, Reply } from "./types.ts";
+import { Config, Pattern, Post, Page, Thread, Reply } from "./types.js";
+import fs from "fs-extra";
 // Define interfaces for type safety
 
 export const getNewFilteredPosts = async (timeUNIX: number): Promise<Post[]> => {
@@ -12,7 +13,7 @@ export const getNewFilteredPosts = async (timeUNIX: number): Promise<Post[]> => 
 };
 
 const fetchCatalog = async (): Promise<Page[]> => {
-  const response = await fetch("https://a.4cdn.org/biz/catalog.json");
+  const response: any = await fetch("https://a.4cdn.org/biz/catalog.json");
   return await response.json();
 };
 
@@ -69,7 +70,7 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
       return [mainPost, ...replies];
     });
 
-    const filterThreadPosts = posts.filter((post) => post.timeUNIX > minPostDate);
+    const filterThreadPosts = posts.filter((post: Post) => post.timeUNIX > minPostDate);
 
     return filterThreadPosts;
   });
@@ -77,8 +78,7 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
 const CONFIG_FILE_PATH = "./config.json";
 
 const filterPosts = async (posts: Post[]): Promise<Post[]> => {
-  const configText = await Deno.readTextFile(CONFIG_FILE_PATH);
-  const config: Config = JSON.parse(configText);
+  const config: Config = fs.readJsonSync(CONFIG_FILE_PATH);
 
   // Access the configuration values
   const keyWords = config.biz.keyWords;
@@ -108,7 +108,7 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
       }, []);
 
       // Highlight matched key words and update post fields directly
-      matchedKeyWords.forEach((pattern) => {
+      matchedKeyWords.forEach((pattern: string) => {
         const regex = new RegExp(`(?<!\\*)(${pattern})(?!\\*)`, "gi");
 
         post.filename = post.filename.replace(regex, "__**$1**__");
@@ -179,12 +179,6 @@ const highLightTokenAddress = (text: string, pattern: string): string => {
 
   return text;
 };
-
-function getUnixTimeMinusSeconds(seconds: number): number {
-  const currentTime = Date.now(); // Current time in milliseconds
-  const timeMinusMinutes = currentTime - seconds * 1000; // Subtract minutes in milliseconds
-  return Math.floor(timeMinusMinutes / 1000); // Convert to UNIX timestamp in seconds
-}
 
 // Reading from file
 

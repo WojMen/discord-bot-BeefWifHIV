@@ -1,8 +1,8 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Message, TextChannel } from "discord.js";
-import { sleep, getUnixTimeMinusSeconds } from "../../common/time.ts";
-import { getNewFilteredPosts } from "../../common/getNewFilteredPosts.ts";
+import { sleep, getUnixTimeMinusSeconds } from "../../common/time.js";
+import { getNewFilteredPosts } from "../../common/getNewFilteredPosts.js";
 
-import { Post } from "../../common/types.ts";
+import { Post } from "../../common/types.js";
 
 export default {
   data: new SlashCommandBuilder()

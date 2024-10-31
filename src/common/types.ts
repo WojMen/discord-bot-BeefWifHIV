@@ -18,7 +18,6 @@ export interface Page {
 
 export interface Config {
   biz: {
-    lastTimeUNIX: number;
     keyWords: string[];
     blockedWords: string[];
     regexPatterns: Pattern[];

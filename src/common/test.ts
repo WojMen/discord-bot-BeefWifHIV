@@ -8,6 +8,8 @@ export const getNewFilteredPosts = async (timeUNIX: number): Promise<Post[]> => 
   const allPosts: Post[] = await aggregatePosts(catalog, timeUNIX);
   const filteredPosts: Post[] = await filterPosts(allPosts);
 
+  console.log(filteredPosts);
+
   return filteredPosts;
 };
 
@@ -106,7 +108,7 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
         return acc;
       }, []);
 
-      // Highlight matched key words and update post fields directly
+      // Highlight matched key words
       matchedKeyWords.forEach((pattern: string) => {
         const regex = new RegExp(`(?<!\\*)(${pattern})(?!\\*)`, "gi");
 
@@ -114,20 +116,7 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
         post.comment = post.comment.replace(regex, "__**$1**__");
       });
 
-      // // Check for regex patterns
-      // const matchedPatterns = patterns
-      //   .map(({ regex, label }) => {
-      //     const regexT = new RegExp(regex, "g");
-
-      //     const hasMatch = texts.some((text) => {
-      //       const textMatches = text.toLowerCase().match(regexT) || [];
-      //       return textMatches && textMatches.length > 0;
-      //     });
-
-      //     return hasMatch ? label : null;
-      //   })
-      //   .filter((label): label is string => label !== null);
-
+      // check for eth/sol addressess
       const matchedPatterns = patterns.reduce((acc: string[], { regex, label }) => {
         const regexT = new RegExp(regex, "g");
 
@@ -195,4 +184,4 @@ const highLightTokenAddress = (text: string, pattern: string): string => {
 // }));
 // const filteredPosts = await filterPosts(transformedPosts);
 
-// getNewFilteredPosts(3500);
+getNewFilteredPosts(300);

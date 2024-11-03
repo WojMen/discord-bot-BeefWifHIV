@@ -1,8 +1,15 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Message, TextChannel } from "discord.js";
 import { sleep, getUnixTimeMinusSeconds } from "../../common/time.js";
 import { getNewFilteredPosts } from "../../common/getNewFilteredPosts.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs-extra";
 
 import { Post } from "../../common/types.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const LAST_COMMAND_FILE = path.join(__dirname, "../../data/lastCommand.json");
 
 export default {
   data: new SlashCommandBuilder()
@@ -12,27 +19,40 @@ export default {
       option
         .setName("seconds")
         .setDescription("Specify the number of seconds for how far back to check.")
-        .setRequired(true)
+        .setRequired(false)
     ),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const seconds = interaction.options.getNumber("seconds", true); // Retrieves the seconds option
+    const seconds = interaction.options.getNumber("seconds", true);
     await interaction.reply("Started looking! I will send messages from /biz/ until you say `stop`.");
 
+    const commandData = {
+      channelId: interaction.channelId,
+      commandName: "get-biz-posts",
+      seconds: seconds,
+      date: new Date().toLocaleString(),
+    };
+
+    fs.writeFileSync(LAST_COMMAND_FILE, JSON.stringify(commandData, null, 2));
+
     let lastMessage: Message | null = null;
-    let counter = -1;
+    let counter = 35;
     let postTime = 0;
 
     try {
-      let minPostTime = getUnixTimeMinusSeconds(seconds || 900);
+      let minPostTime = seconds > 60000 ? seconds : getUnixTimeMinusSeconds(seconds || 900);
 
       while (await stopLooking(interaction)) {
-        if (counter % 16 === 0 || counter === -1) {
+        if (counter % 35 === 0) {
           console.log("Looking for new posts..." + new Date().toLocaleTimeString());
 
           [postTime, lastMessage] = await sendAavaiblePosts(minPostTime, interaction, lastMessage);
 
-          minPostTime = postTime > minPostTime ? postTime : minPostTime;
+          if (postTime > minPostTime) {
+            minPostTime = postTime;
+            commandData.seconds = minPostTime;
+            fs.writeFileSync(LAST_COMMAND_FILE, JSON.stringify(commandData, null, 2));
+          }
 
           counter = 0;
         }
@@ -58,6 +78,8 @@ const stopLooking = async (interaction: ChatInputCommandInteraction): Promise<bo
 
   const result = recentMessages?.find((message) => {
     if (message.content.toLowerCase() === "stop" && !message.author.tag.includes("BeefWifHIV")) {
+      fs.writeFileSync(LAST_COMMAND_FILE, JSON.stringify({}, null, 2));
+
       return true;
     }
     return false;
@@ -107,14 +129,14 @@ async function sendAavaiblePosts(
       if (messageContent.length > 0) {
         console.log("Sending message part:", messagePart);
         if (interaction.channel instanceof TextChannel) {
-          await interaction.channel.send(messageContent);
+          lastMessage = await interaction.channel.send(messageContent);
         }
         messageContent = "";
       } else {
         console.log("Sending message shorten part:", messagePart);
         const trimmedMessage = messagePart.substring(0, maxLength);
         if (interaction.channel instanceof TextChannel) {
-          await interaction.channel.send(trimmedMessage);
+          lastMessage = await interaction.channel.send(trimmedMessage);
         }
         messagePart = "";
       }

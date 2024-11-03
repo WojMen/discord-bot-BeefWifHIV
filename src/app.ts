@@ -1,11 +1,21 @@
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
-import { Client, Collection, Events, GatewayIntentBits, Interaction } from "discord.js";
+import {
+  Client,
+  Collection,
+  Events,
+  GatewayIntentBits,
+  Interaction,
+  TextChannel,
+  ChatInputCommandInteraction,
+} from "discord.js";
 import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
+
+const CONFIG_FILE_PATH = "src/data/lastCommand.json";
 
 // Extend the Client to include commands collection
 interface Command {
@@ -74,8 +84,33 @@ const foldersPath = path.join(__dirname, "./commands");
 })();
 
 // When the client is ready, run this code (only once)
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user?.tag}`);
+
+  const lastCommandData = fs.readJsonSync(CONFIG_FILE_PATH);
+
+  console.log("Restarting previous commands...");
+  console.log(lastCommandData);
+
+  // #TODO
+  // add interface for last commands to rerun after restart
+  // lastCommandsData.forEach(async (lastCommandData: { channelId: string; commandName: string; seconds: number }) => {
+
+  if (lastCommandData && lastCommandData.channelId && lastCommandData.commandName) {
+    const channel = await client.channels.fetch(lastCommandData.channelId);
+    const command = client.commands.get(lastCommandData.commandName);
+
+    if (!(channel instanceof TextChannel) || !command) return;
+
+    console.log(`Restarting get-biz-posts in channel: ${channel.id}`);
+
+    command.execute({
+      channel,
+      options: { getNumber: () => lastCommandData.seconds },
+      reply: async (message: string) => channel.send(message),
+    } as unknown as ChatInputCommandInteraction);
+  }
+  // });
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {

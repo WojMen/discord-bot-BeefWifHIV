@@ -10,10 +10,11 @@ import {
   TextChannel,
   ChatInputCommandInteraction,
 } from "discord.js";
+import logger from "./common/logger.js";
 import dotenv from "dotenv";
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const CONFIG_FILE_PATH = "src/data/lastCommand.json";
 
@@ -26,6 +27,16 @@ interface Command {
 interface ExtendedClient extends Client {
   commands: Collection<string, Command>;
 }
+
+process.on("uncaughtException", (error) => {
+  logger.error(`Uncaught Exception: ${error.message}`);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error(`Unhandled Rejection: ${reason}`);
+  process.exit(1);
+});
 
 // Create a new client instance with custom properties
 const client = new Client({
@@ -79,7 +90,7 @@ const foldersPath = path.join(__dirname, "./commands");
       console.error("DISCORD_TOKEN is not set in environment variables.");
     }
   } catch (error) {
-    console.error("Error loading commands:", error);
+    logger.error("Error loading commands:", error);
   }
 })();
 
@@ -126,7 +137,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
+    logger.error("Error executing command:", error);
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({ content: "There was an error while executing this command!", ephemeral: true });
     } else {

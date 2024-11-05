@@ -4,7 +4,7 @@ import { getNewFilteredPosts } from "../../common/getNewFilteredPosts.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs-extra";
-
+import logger from "../../common/logger.js";
 import { Post } from "../../common/types.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,7 +61,7 @@ export default {
         counter++;
       }
     } catch (error) {
-      console.error("Error in the looking loop:", error);
+      logger.error("Error in the looking loop:", error);
       if (interaction.channel instanceof TextChannel) {
         interaction.channel.send("An error occurred, stopping looking...");
       }

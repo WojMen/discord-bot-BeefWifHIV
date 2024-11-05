@@ -36,14 +36,14 @@ export default {
     fs.writeFileSync(LAST_COMMAND_FILE, JSON.stringify(commandData, null, 2));
 
     let lastMessage: Message | null = null;
-    let counter = 35;
+    let counter = 20;
     let postTime = 0;
 
     try {
       let minPostTime = seconds > 60000 ? seconds : getUnixTimeMinusSeconds(seconds || 900);
 
       while (await stopLooking(interaction)) {
-        if (counter % 35 === 0) {
+        if (counter % 20 === 0) {
           console.log("Looking for new posts..." + new Date().toLocaleTimeString());
 
           [postTime, lastMessage] = await sendAavaiblePosts(minPostTime, interaction, lastMessage);
@@ -100,7 +100,7 @@ async function sendAavaiblePosts(
 
     const messageLines = lastMessage.content.split("\n");
     messageLines.pop();
-    const updatedTime = `Last updated: ${new Date().toLocaleTimeString()}`;
+    const updatedTime = `-# Last updated: ${new Date().toLocaleTimeString()}`;
     const newContent = `${messageLines.join("\n")}\n${updatedTime}`;
     await lastMessage.edit(newContent);
     return [seconds, lastMessage];
@@ -115,10 +115,15 @@ async function sendAavaiblePosts(
     messagePart += `--------------------------------------\n`;
     if (post.capcode) messagePart += `**Capcode:** ${post.capcode}\n`;
 
-    if (post.matchedKeyWords && post.matchedKeyWords.length > 0)
-      messagePart += `**Keywords:** __${post.matchedKeyWords.join(", ")}__\n`;
-    if (post?.matchedPatterns && post.matchedPatterns.length > 0)
-      messagePart += `**Patterns:** __${post.matchedPatterns.join(", ")}__\n`;
+    if (post.matchedKeyWords && post.matchedKeyWords.length > 0) {
+      const keyWordsHighlighted = post.matchedKeyWords.map((word) => `__**${word}**__`);
+      messagePart += `**Keywords:** ${keyWordsHighlighted.join(", ")}\n`;
+    }
+
+    if (post?.matchedPatterns && post.matchedPatterns.length > 0) {
+      const patternsHighlighted = post.matchedPatterns.map((pattern) => `__**${pattern}**__`);
+      messagePart += `**Patterns:** ${patternsHighlighted.join(", ")}\n`;
+    }
 
     messagePart += `**Link:** <${post.link}>\n`;
     messagePart += `**Time:** ${post.time}\n`;
@@ -148,7 +153,7 @@ async function sendAavaiblePosts(
   if (messageContent.length === 0) return [newPosts.slice(-1)[0].timeUNIX, lastMessage];
 
   console.log("Sending message content:", messageContent);
-  messageContent += `Last updated: ${new Date().toLocaleTimeString()}`;
+  messageContent += `-# Last updated: ${new Date().toLocaleTimeString()}`;
   if (interaction.channel instanceof TextChannel) {
     lastMessage = await interaction.channel.send(messageContent);
   }

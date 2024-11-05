@@ -1,7 +1,10 @@
 import axios from "axios";
 import logger from "./logger.js";
+import dotenv from "dotenv";
 
-const ETHERSCAN_API_KEY = "ZSCFCQHRH3SPQPCHJ6M65CAZP74IUPD9FJ";
+// Load environment variables
+dotenv.config({ path: ".env" });
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
 const getEthGasPrice = async (): Promise<string> => {
   try {

@@ -42,3 +42,14 @@ export interface Post {
   matchedKeyWords?: string[];
   matchedPatterns?: string[];
 }
+
+export type GweiThreshold = {
+  id: string;
+  value: number;
+  user: string;
+  channel: string;
+  usersToNotify: string[];
+  createdAt: Date;
+  finishedAt: Date | undefined;
+  active: boolean;
+};

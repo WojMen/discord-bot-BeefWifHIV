@@ -12,6 +12,7 @@ import {
 } from "discord.js";
 import logger from "./common/logger.js";
 import dotenv from "dotenv";
+import startEthGweiMonitoring from "./common/startEthGweiMonitoring.js";
 
 // Load environment variables
 dotenv.config({ path: ".env" });
@@ -97,6 +98,9 @@ const foldersPath = path.join(__dirname, "./commands");
 // When the client is ready, run this code (only once)
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user?.tag}`);
+
+  startEthGweiMonitoring(client);
+  console.log(`Starting ping gwei thresholds`);
 
   const lastCommandData = fs.readJsonSync(CONFIG_FILE_PATH);
 

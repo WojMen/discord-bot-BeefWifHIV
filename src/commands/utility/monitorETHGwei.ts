@@ -8,6 +8,7 @@ export default {
     .setDescription("Updates chosen channel with the latest ETH gas prices from etherscan.io.")
     .addStringOption((option) =>
       option.setName("channel-id").setDescription("Specify the channelID to update gas prices.").setRequired(true)
+    
     ),
 
   async execute(interaction: ChatInputCommandInteraction) {
@@ -28,7 +29,7 @@ export default {
         }
 
         await updateChannelName(channelId, interaction);
-      }, 60000);
+      }, 300000);
     } catch (error) {
       logger.error("Error in the monitoring loop:", error);
       if (interaction.channel instanceof TextChannel) {

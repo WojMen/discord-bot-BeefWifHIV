@@ -7,7 +7,7 @@ const CONFIG_FILE_PATH = "src/data/gweiThresholds.json";
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("ping-gwei-min")
+    .setName("ping-gwei")
     .setDescription("I will ping you when the gas price is below a certain threshold.")
     .addNumberOption((option) => option.setName("gwei").setDescription("Specify the gwei value").setRequired(true))
     .addStringOption((option) =>

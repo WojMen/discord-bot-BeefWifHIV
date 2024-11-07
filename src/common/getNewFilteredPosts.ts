@@ -61,6 +61,7 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
             name: reply.name || "",
             filename: reply.filename ? he.decode(reply.filename) : "",
             comment: reply.com ? he.decode(reply.com) : "",
+            // comment: reply.com ? he.decode(reply.com) : "",
           });
 
           return arr;
@@ -76,6 +77,28 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
 
 const CONFIG_FILE_PATH = "./config.json";
 
+const takeLinksFromStr = (text: string): [string, string[]] => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  const tempUrls: string[] = [];
+
+  const textWithPlaceholders = text.replace(urlRegex, (url) => {
+    tempUrls.push(url);
+    return "__URL_PLACEHOLDER__";
+  });
+
+  const cleanedUrls = tempUrls.map((url) => url.replace(/<wbr>/g, "").replace(/<br>/g, " "));
+
+  const blockedPreviewUrl = cleanedUrls.map((url) => url.replace(urlRegex, "<$1>"));
+
+  return [textWithPlaceholders, blockedPreviewUrl];
+};
+
+const addLinksToStr = (text: string, urls: string[]): string => {
+  let urlIndex = 0;
+  return text.replace(/__URL_PLACEHOLDER__/g, () => urls[urlIndex++]);
+};
+
 const filterPosts = async (posts: Post[]): Promise<Post[]> => {
   const config: Config = fs.readJsonSync(CONFIG_FILE_PATH);
 
@@ -86,6 +109,10 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
 
   const filteredPosts = posts
     .map((post) => {
+      // remove from checking keywords and default replace
+      const [text, urls] = takeLinksFromStr(post.comment);
+      if (urls.length > 0) post.comment = text;
+
       post.comment = post.comment
         .replace(/<br\s*\/?>/gi, "\n")
         .replace(/\n{3,}/g, "\n")
@@ -114,20 +141,10 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
         post.comment = post.comment.replace(regex, "__**$1**__");
       });
 
-      // // Check for regex patterns
-      // const matchedPatterns = patterns
-      //   .map(({ regex, label }) => {
-      //     const regexT = new RegExp(regex, "g");
+      // bring back urls for adresses like sol/eth
+      if (urls.length > 0) post.comment = addLinksToStr(post.comment, urls);
 
-      //     const hasMatch = texts.some((text) => {
-      //       const textMatches = text.toLowerCase().match(regexT) || [];
-      //       return textMatches && textMatches.length > 0;
-      //     });
-
-      //     return hasMatch ? label : null;
-      //   })
-      //   .filter((label): label is string => label !== null);
-
+      // Check for regex patterns
       const matchedPatterns = patterns.reduce((acc: string[], { regex, label }) => {
         const regexT = new RegExp(regex, "g");
 

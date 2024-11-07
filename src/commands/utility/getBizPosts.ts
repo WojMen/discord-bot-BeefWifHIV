@@ -23,7 +23,7 @@ export default {
     ),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const seconds = interaction.options.getNumber("seconds", true);
+    const seconds = interaction.options.getNumber("seconds", false) || 900;
     await interaction.reply("Started looking! I will send messages from /biz/ until you say `stop`.");
 
     const commandData = {
@@ -40,7 +40,7 @@ export default {
     let postTime = 0;
 
     try {
-      let minPostTime = seconds > 60000 ? seconds : getUnixTimeMinusSeconds(seconds || 900);
+      let minPostTime = seconds > 60000 ? seconds : getUnixTimeMinusSeconds(seconds);
 
       while (await stopLooking(interaction)) {
         if (counter % 20 === 0) {

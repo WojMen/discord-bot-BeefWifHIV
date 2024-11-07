@@ -4,7 +4,7 @@ import getETHGwei from "../../common/getETHGwei.js";
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("monitor-eth-gwei")
+    .setName("monitor-gwei")
     .setDescription("Updates chosen channel with the latest ETH gas prices from etherscan.io.")
     .addStringOption((option) =>
       option.setName("channel-id").setDescription("Specify the channelID to update gas prices.").setRequired(true)

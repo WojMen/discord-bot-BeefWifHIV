@@ -102,7 +102,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   startEthGweiMonitoring(client);
   console.log(`Starting ping gwei thresholds`);
 
-  const lastCommandData = fs.readJsonSync(CONFIG_FILE_PATH);
+  const lastCommandData = fs.existsSync(CONFIG_FILE_PATH) ? JSON.parse(fs.readFileSync(CONFIG_FILE_PATH, "utf-8")) : {};
 
   console.log("Restarting previous commands...");
   console.log(lastCommandData);

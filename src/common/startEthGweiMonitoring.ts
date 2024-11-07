@@ -12,7 +12,7 @@ const startEthGweiMonitoring = async (client: Client): Promise<void> => {
     setInterval(async () => {
       const data: GweiThreshold[] = fs.existsSync(CONFIG_FILE_PATH)
         ? JSON.parse(fs.readFileSync(CONFIG_FILE_PATH, "utf-8"))
-        : {};
+        : [];
 
       if ((data && data.length === 0) || Object.keys(data).length === 0) return;
 

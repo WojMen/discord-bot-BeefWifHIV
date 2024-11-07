@@ -1,24 +1,38 @@
 # BeefWifHIV
 
+# Commads
+
+### Get Biz Posts
+
+- monitor threads on 4chan biz
+- searches for keywords and ETH/SOL addresses
+- each potential post is being sent to channel
+
+### Monitor eth gwei
+
+- updates specified channel(right click channed to get its ID)
+  with actual fast gwei price form etherscan
+
+### Ping gwei min
+
+- notify user when specified threholds is achieved
+- as a second parameter u can pass users/roles to ping also
+
 # TODO
 
 ## Quick improvements
 
 - color sequence with each new messsage line
-- add flag if its a new thread or just reply
 
 ## Upcoming features
 
 - stop highlightning words/tags inside links
 - configure env for production launch
 - docker
+- fix json files loosing channel id parameter
 
-# New Commands
+## New Possible commands
 
-## GWEI alert
-
-- user can set alarm for specific gwei price
-- update channel name for acutal price
 
 # Maybe in future
 

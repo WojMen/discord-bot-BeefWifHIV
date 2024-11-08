@@ -8,15 +8,15 @@
 - searches for keywords and ETH/SOL addresses
 - each potential post is being sent to channel
 
-### Monitor eth gwei
+### Monitor gwei
 
-- updates specified channel(right click channed to get its ID)
-  with actual fast gwei price form etherscan
+- updates every 5mins specified channel (right click channed to get its ID)\
+  with actual gwei (fast gwei price form etherscan)
 
-### Ping gwei min
+### Ping gwei
 
 - notify user when specified threholds is achieved
-- as a second parameter u can pass users/roles to ping also
+- as a second parameter u can also pass users/roles to ping alongside you
 
 # TODO
 
@@ -26,14 +26,16 @@
 
 ## Upcoming features
 
-- stop highlightning words/tags inside links
+- transofrm from files to sequlize with sqlite
+
+- use of AI to process verified posts to ping users if something is important
 - configure env for production launch
 - docker
-- fix json files loosing channel id parameter
 
 ## New Possible commands
 
+- ...
 
 # Maybe in future
 
-- websi te with information about bot status
+- website with information about bot status

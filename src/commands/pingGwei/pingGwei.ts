@@ -17,7 +17,7 @@ export default {
   async execute(interaction: ChatInputCommandInteraction) {
     const gwei = interaction.options.getNumber("gwei", true);
     const mentions = interaction.options.getString("notify", false) || "";
-    await interaction.reply("Started monitoring! I will ping you when the gas price is below a certain threshold.");
+    await interaction.reply(`Started monitoring! I will ping you when the gas price is below ${gwei} gwei .`);
     console.log(mentions);
 
     try {
@@ -25,7 +25,7 @@ export default {
         ? mentions
             .split(" ")
             .map((mention) => mention.replace(/[<@&>]/g, ""))
-            .filter((v) => v !== "") // Remove <@ & > characters
+            .filter((v) => v !== "")
         : [];
 
       const threshold: GweiThreshold = {

@@ -1,5 +1,5 @@
 import he from "he";
-import { Config, Pattern, Post, Page, Thread, Reply } from "./types.js";
+import { Config, Pattern, Post, Page, Thread, Reply } from "../../common/types.js";
 import fs from "fs-extra";
 // Define interfaces for type safety
 
@@ -7,8 +7,6 @@ export const getNewFilteredPosts = async (timeUNIX: number): Promise<Post[]> => 
   const catalog = await fetchCatalog();
   const allPosts: Post[] = await aggregatePosts(catalog, timeUNIX);
   const filteredPosts: Post[] = await filterPosts(allPosts);
-
-  console.log(filteredPosts);
 
   return filteredPosts;
 };
@@ -63,6 +61,7 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
             name: reply.name || "",
             filename: reply.filename ? he.decode(reply.filename) : "",
             comment: reply.com ? he.decode(reply.com) : "",
+            // comment: reply.com ? he.decode(reply.com) : "",
           });
 
           return arr;
@@ -78,6 +77,28 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
 
 const CONFIG_FILE_PATH = "./config.json";
 
+const takeLinksFromStr = (text: string): [string, string[]] => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  const tempUrls: string[] = [];
+
+  const textWithPlaceholders = text.replace(urlRegex, (url) => {
+    tempUrls.push(url);
+    return "__URL_PLACEHOLDER__";
+  });
+
+  const cleanedUrls = tempUrls.map((url) => url.replace(/<wbr>/g, "").replace(/<br>/g, " "));
+
+  const blockedPreviewUrl = cleanedUrls.map((url) => url.replace(urlRegex, "<$1>"));
+
+  return [textWithPlaceholders, blockedPreviewUrl];
+};
+
+const addLinksToStr = (text: string, urls: string[]): string => {
+  let urlIndex = 0;
+  return text.replace(/__URL_PLACEHOLDER__/g, () => urls[urlIndex++]);
+};
+
 const filterPosts = async (posts: Post[]): Promise<Post[]> => {
   const config: Config = fs.readJsonSync(CONFIG_FILE_PATH);
 
@@ -88,6 +109,10 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
 
   const filteredPosts = posts
     .map((post) => {
+      // remove from checking keywords and default replace
+      const [text, urls] = takeLinksFromStr(post.comment);
+      if (urls.length > 0) post.comment = text;
+
       post.comment = post.comment
         .replace(/<br\s*\/?>/gi, "\n")
         .replace(/\n{3,}/g, "\n")
@@ -108,7 +133,7 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
         return acc;
       }, []);
 
-      // Highlight matched key words
+      // Highlight matched key words and update post fields directly
       matchedKeyWords.forEach((pattern: string) => {
         const regex = new RegExp(`(?<!\\*)(${pattern})(?!\\*)`, "gi");
 
@@ -116,7 +141,10 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
         post.comment = post.comment.replace(regex, "__**$1**__");
       });
 
-      // check for eth/sol addressess
+      // bring back urls for adresses like sol/eth
+      if (urls.length > 0) post.comment = addLinksToStr(post.comment, urls);
+
+      // Check for regex patterns
       const matchedPatterns = patterns.reduce((acc: string[], { regex, label }) => {
         const regexT = new RegExp(regex, "g");
 
@@ -184,4 +212,4 @@ const highLightTokenAddress = (text: string, pattern: string): string => {
 // }));
 // const filteredPosts = await filterPosts(transformedPosts);
 
-getNewFilteredPosts(300);
+// console.log(await getNewFilteredPosts(3500));

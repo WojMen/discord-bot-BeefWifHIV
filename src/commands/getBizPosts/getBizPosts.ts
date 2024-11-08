@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Message, TextChannel } from "discord.js";
 import { sleep, getUnixTimeMinusSeconds } from "../../common/time.js";
-import { getNewFilteredPosts } from "../../common/getNewFilteredPosts.js";
+import { getNewFilteredPosts } from "./getNewFilteredPosts.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs-extra";
@@ -64,6 +64,7 @@ export default {
       logger.error("Error in the looking loop:", error);
       if (interaction.channel instanceof TextChannel) {
         interaction.channel.send("An error occurred, stopping looking...");
+        process.exit(1);
       }
     }
 

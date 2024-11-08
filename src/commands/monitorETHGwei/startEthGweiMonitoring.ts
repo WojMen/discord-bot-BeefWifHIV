@@ -1,9 +1,9 @@
 import { Client, TextChannel } from "discord.js";
-import getETHGwei from "./getETHGwei.js";
-import logger from "./logger.js";
+import getETHGwei from "../../common/getETHGwei.js";
+import logger from "../../common/logger.js";
 import fs from "fs-extra";
 
-import { GweiThreshold } from "./types.js";
+import { GweiThreshold } from "../../common/types.js";
 
 const CONFIG_FILE_PATH = "src/data/gweiThresholds.json";
 

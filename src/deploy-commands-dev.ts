@@ -32,18 +32,20 @@ const foldersPath = path.join(__dirname, "commands");
       // Retrieve each command's data for deployments
       for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
-        console.log(`Found command at ${filePath}`);
+        // console.log(`Found command at ${filePath}`);
 
         // Use dynamic import for ES module compatibility
         const commandModule = await import(`file://${filePath}`);
         const command = commandModule.default;
 
         // Check if the command has the required properties
-        if ("data" in command && "execute" in command) {
+        if (command && "data" in command && "execute" in command) {
           commands.push(command.data.toJSON());
-        } else {
-          console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+          console.log(`Found command at ${filePath}`);
         }
+        // else {
+        //   console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+        // }
       }
     }
 

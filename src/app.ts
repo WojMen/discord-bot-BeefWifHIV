@@ -12,7 +12,7 @@ import {
 } from "discord.js";
 import logger from "./common/logger.js";
 import dotenv from "dotenv";
-import startEthGweiMonitoring from "./common/startEthGweiMonitoring.js";
+import startEthGweiMonitoring from "./commands/monitorETHGwei/startEthGweiMonitoring.js";
 
 // Load environment variables
 dotenv.config({ path: ".env" });

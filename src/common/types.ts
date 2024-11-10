@@ -29,7 +29,7 @@ export interface Pattern {
   label: string;
 }
 
-export interface Post {
+export interface IBizPost {
   threadId: number;
   postId: number;
   time: string;
@@ -44,7 +44,6 @@ export interface Post {
 }
 
 export type GweiThreshold = {
-  id: string;
   value: number;
   user: string;
   channel: string;
@@ -53,3 +52,25 @@ export type GweiThreshold = {
   finishedAt: Date | undefined;
   active: boolean;
 };
+
+export interface IUser {
+  name: string;
+  username: string;
+  description?: string;
+  usage_count?: number;
+}
+
+export interface ICommandLog {
+  name: string;
+  channelId: string;
+  userId: string;
+  parameters: Record<string, any>;
+  active: boolean;
+}
+
+export interface IGeneralAPI {
+  type: number;
+  response: any;
+  value: any;
+  error: string;
+}

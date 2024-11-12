@@ -1,3 +1,5 @@
+import { CreationOptional } from "sequelize";
+
 export interface Thread extends Reply {
   last_replies?: Reply[];
 }
@@ -53,10 +55,20 @@ export type GweiThreshold = {
   active: boolean;
 };
 
-export interface IUser {
+interface IBaseModel {
+  id?: CreationOptional<number>;
+  createdAt?: CreationOptional<Date>;
+  updatedAt?: CreationOptional<Date>;
+}
+
+export type IUserCreationAttributes = Omit<IUser, "id" | "createdAt" | "updatedAt"> & {
+  description?: string; // Ensures `description` defaults to `string`
+};
+
+export interface IUser extends IBaseModel {
   name: string;
   username: string;
-  description?: string;
+  description?: string | null;
   usage_count?: number;
 }
 

@@ -29,7 +29,6 @@ export default {
         : [];
 
       const threshold: GweiThreshold = {
-        id: Math.random().toString(36).substring(12),
         value: gwei,
         user: interaction.user.id,
         channel: interaction.channelId,

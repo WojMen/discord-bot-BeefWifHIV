@@ -1,5 +1,5 @@
 import { initDatabase } from "./db.js";
-import { ICommandLog, IBizPost, IUser } from "../common/types.js";
+import { ICommandLog, IBizPost, IUser, IUserCreationAttributes } from "../common/types.js";
 import { createUser } from "../services/userService.js";
 import { createCommandLog } from "../services/commandLogsService.js";
 import { createPost, getPosts } from "../services/bizPostService.js";
@@ -11,7 +11,7 @@ async function main() {
     name: "SampleUser",
     description: "A sample user description",
     username: "sampleuser123",
-  } as IUser);
+  } as IUserCreationAttributes);
 
   await createCommandLog({
     userId: "1",

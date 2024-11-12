@@ -6,6 +6,7 @@ import fs from "fs-extra";
 export const getNewFilteredPosts = async (timeUNIX: number): Promise<Post[]> => {
   const catalog = await fetchCatalog();
   const allPosts: Post[] = await aggregatePosts(catalog, timeUNIX);
+
   const filteredPosts: Post[] = await filterPosts(allPosts);
 
   return filteredPosts;
@@ -13,6 +14,11 @@ export const getNewFilteredPosts = async (timeUNIX: number): Promise<Post[]> => 
 
 const fetchCatalog = async (): Promise<Page[]> => {
   const response: any = await fetch("https://a.4cdn.org/biz/catalog.json");
+  return await response.json();
+};
+
+const fetchThread = async (threadId: number): Promise<Page[]> => {
+  const response: any = await fetch(`https://a.4cdn.org/biz/thread/${threadId}.json`);
   return await response.json();
 };
 
@@ -32,7 +38,7 @@ function convertEasternToUTC(unixTimestamp: number): string {
   return polandTime;
 }
 
-const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]> =>
+const aggregatePosts = async (catalog: Page[], minPostDate: number): Promise<Post[]> =>
   catalog.flatMap((page: Page) => {
     const posts = page.threads.flatMap((thread: Thread): Post[] => {
       const mainPost: Post = {
@@ -115,6 +121,7 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
 
       post.comment = post.comment
         .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<wbr\s*\/?>/gi, "")
         .replace(/\n{3,}/g, "\n")
         .replace(/<a[^>]*class="quotelink"[^>]*>(.*?)<\/a>/g, "$1")
         .replace(/<span[^>]*class="quote"[^>]*>(.*?)<\/span>/g, "$1");
@@ -212,4 +219,63 @@ const highLightTokenAddress = (text: string, pattern: string): string => {
 // }));
 // const filteredPosts = await filterPosts(transformedPosts);
 
-// console.log(await getNewFilteredPosts(3500));
+//
+//
+//
+
+// getNewFilteredPosts(10000).then((posts) => {
+//   const x = posts.filter((post) => post.matchedPatterns && post.matchedPatterns?.length > 0); // Filter posts by time
+//   x.forEach((post) => console.log(post)); // Log the filtered posts
+// });
+// console.log(await getNewFilteredPosts(10000));
+
+//
+//  TEST THREAD
+//
+
+// Aggregate posts from a single thread
+const aggregateThreadPosts = async (thread: any, minPostDate: number): Promise<Post[]> => {
+  const mainPost: Post = {
+    threadId: thread.posts[0].no,
+    postId: thread.posts[0].no,
+    timeUNIX: thread.posts[0].time,
+    time: convertEasternToUTC(thread.posts[0].time),
+    link: `https://boards.4chan.org/biz/thread/${thread.posts[0].no}`,
+    capcode: thread.posts[0].capcode || "",
+    name: thread.posts[0].name || "",
+    filename: thread.posts[0].filename ? he.decode(thread.posts[0].filename) : "",
+    comment: thread.posts[0].com ? he.decode(thread.posts[0].com) : "",
+  };
+
+  const replies: Post[] =
+    thread.posts.slice(1).reduce((arr: Post[], reply: Reply) => {
+      if (reply.time < minPostDate) return arr;
+
+      arr.push({
+        threadId: mainPost.threadId,
+        postId: reply.no,
+        timeUNIX: reply.time,
+        time: convertEasternToUTC(reply.time),
+        link: `https://boards.4chan.org/biz/thread/${mainPost.threadId}#p${reply.no}`,
+        capcode: reply.capcode || "",
+        name: reply.name || "",
+        filename: reply.filename ? he.decode(reply.filename) : "",
+        comment: reply.com ? he.decode(reply.com) : "",
+      });
+
+      return arr;
+    }, []) || [];
+
+  return [mainPost, ...replies].filter((post: Post) => post.timeUNIX > minPostDate);
+};
+
+const testThreadPosts = async (threadId: number, timeUNIX: number): Promise<Post[]> => {
+  const thread = await fetchThread(threadId);
+  const allPosts: Post[] = await aggregateThreadPosts(thread, timeUNIX);
+
+  const filteredPosts: Post[] = await filterPosts(allPosts);
+
+  return filteredPosts;
+};
+
+// console.log(await testThreadPosts(59188073, 10000));

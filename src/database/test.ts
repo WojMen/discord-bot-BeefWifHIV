@@ -1,8 +1,9 @@
 import { initDatabase } from "./db.js";
-import { ICommandLog, IBizPost, IUser, IUserCreationAttributes } from "../common/types.js";
+import { ICommandLog, IBizPost, IUserCreationAttributes } from "../common/types.js";
 import { createUser } from "../services/userService.js";
 import { createCommandLog } from "../services/commandLogsService.js";
-import { createPost, getPosts } from "../services/bizPostService.js";
+import { createPost } from "../services/bizPostService.js";
+import { createGweiRequest, getGweiRequests, updateStatusGweiRequests } from "../services/gweiRequestService.js";
 
 async function main() {
   await initDatabase();
@@ -35,8 +36,22 @@ async function main() {
     matchedPatterns: ["pattern1", "pattern2"],
   } as IBizPost);
 
-  const posts = await getPosts(1690000000);
-  console.log(posts);
+  // const posts = await getPosts(1690000000);
+  // console.log(posts);
+
+  await createGweiRequest({
+    value: 10,
+    userId: "SampleUser123456789",
+    channelId: "123456789",
+    usersToNotify: ["user1", "user2"],
+    active: true,
+  });
+
+  const gweiRequests = await getGweiRequests();
+  console.log(gweiRequests);
+
+  console.log(await updateStatusGweiRequests([1, 2, 3]));
+  console.log(await getGweiRequests());
 }
 
 main().catch(console.error);

@@ -1,12 +1,12 @@
 import he from "he";
-import { Config, Pattern, Post, Page, Thread, Reply } from "../../common/types.js";
+import { Config, Pattern, IBizPost, Page, Thread, Reply } from "../../common/types.js";
 import fs from "fs-extra";
 // Define interfaces for type safety
 
-export const getNewFilteredPosts = async (timeUNIX: number): Promise<Post[]> => {
+export const getNewFilteredPosts = async (timeUNIX: number): Promise<IBizPost[]> => {
   const catalog = await fetchCatalog();
-  const allPosts: Post[] = await aggregatePosts(catalog, timeUNIX);
-  const filteredPosts: Post[] = await filterPosts(allPosts);
+  const allPosts: IBizPost[] = await aggregatePosts(catalog, timeUNIX);
+  const filteredPosts: IBizPost[] = await filterPosts(allPosts);
 
   return filteredPosts;
 };
@@ -32,10 +32,10 @@ function convertEasternToUTC(unixTimestamp: number): string {
   return polandTime;
 }
 
-const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]> =>
+const aggregatePosts = async (catalog: any, minPostDate: number): Promise<IBizPost[]> =>
   catalog.flatMap((page: Page) => {
-    const posts = page.threads.flatMap((thread: Thread): Post[] => {
-      const mainPost: Post = {
+    const posts = page.threads.flatMap((thread: Thread): IBizPost[] => {
+      const mainPost: IBizPost = {
         threadId: thread.no,
         postId: thread.no,
         timeUNIX: thread.time,
@@ -47,8 +47,8 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
         comment: thread.com ? he.decode(thread.com) : "",
       };
 
-      const replies: Post[] =
-        thread.last_replies?.reduce((arr: Post[], reply: Reply) => {
+      const replies: IBizPost[] =
+        thread.last_replies?.reduce((arr: IBizPost[], reply: Reply) => {
           if (reply.time < minPostDate) return arr;
 
           arr.push({
@@ -70,7 +70,7 @@ const aggregatePosts = async (catalog: any, minPostDate: number): Promise<Post[]
       return [mainPost, ...replies];
     });
 
-    const filterThreadPosts = posts.filter((post: Post) => post.timeUNIX > minPostDate);
+    const filterThreadPosts = posts.filter((IBizPost: IBizPost) => IBizPost.timeUNIX > minPostDate);
 
     return filterThreadPosts;
   });
@@ -99,7 +99,7 @@ const addLinksToStr = (text: string, urls: string[]): string => {
   return text.replace(/__URL_PLACEHOLDER__/g, () => urls[urlIndex++]);
 };
 
-const filterPosts = async (posts: Post[]): Promise<Post[]> => {
+const filterPosts = async (posts: IBizPost[]): Promise<IBizPost[]> => {
   const config: Config = fs.readJsonSync(CONFIG_FILE_PATH);
 
   // Access the configuration values
@@ -108,18 +108,18 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
   const blockedWords = config.biz.blockedWords;
 
   const filteredPosts = posts
-    .map((post) => {
+    .map((IBizPost) => {
       // remove from checking keywords and default replace
-      const [text, urls] = takeLinksFromStr(post.comment);
-      if (urls.length > 0) post.comment = text;
+      const [text, urls] = takeLinksFromStr(IBizPost.comment);
+      if (urls.length > 0) IBizPost.comment = text;
 
-      post.comment = post.comment
+      IBizPost.comment = IBizPost.comment
         .replace(/<br\s*\/?>/gi, "\n")
         .replace(/\n{3,}/g, "\n")
         .replace(/<a[^>]*class="quotelink"[^>]*>(.*?)<\/a>/g, "$1")
         .replace(/<span[^>]*class="quote"[^>]*>(.*?)<\/span>/g, "$1");
 
-      const texts = [post.filename, post.comment];
+      const texts = [IBizPost.filename, IBizPost.comment];
 
       // Check for blocked words
       if (blockedWords.some((word: string) => texts.some((text) => text.toLowerCase().includes(word)))) return null;
@@ -133,16 +133,16 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
         return acc;
       }, []);
 
-      // Highlight matched key words and update post fields directly
+      // Highlight matched key words and update IBizPost fields directly
       matchedKeyWords.forEach((pattern: string) => {
         const regex = new RegExp(`(?<!\\*)(${pattern})(?!\\*)`, "gi");
 
-        post.filename = post.filename.replace(regex, "__**$1**__");
-        post.comment = post.comment.replace(regex, "__**$1**__");
+        IBizPost.filename = IBizPost.filename.replace(regex, "__**$1**__");
+        IBizPost.comment = IBizPost.comment.replace(regex, "__**$1**__");
       });
 
       // bring back urls for adresses like sol/eth
-      if (urls.length > 0) post.comment = addLinksToStr(post.comment, urls);
+      if (urls.length > 0) IBizPost.comment = addLinksToStr(IBizPost.comment, urls);
 
       // Check for regex patterns
       const matchedPatterns = patterns.reduce((acc: string[], { regex, label }) => {
@@ -158,19 +158,19 @@ const filterPosts = async (posts: Post[]): Promise<Post[]> => {
 
       // highlight matched patterns
       matchedPatterns.forEach((pattern) => {
-        post.comment = highLightTokenAddress(post.comment, pattern);
-        post.filename = highLightTokenAddress(post.filename, pattern);
+        IBizPost.comment = highLightTokenAddress(IBizPost.comment, pattern);
+        IBizPost.filename = highLightTokenAddress(IBizPost.filename, pattern);
       });
 
       return matchedKeyWords.length > 0 || matchedPatterns.length > 0
-        ? { ...post, matchedKeyWords, matchedPatterns }
+        ? { ...IBizPost, matchedKeyWords, matchedPatterns }
         : null;
     })
     .filter(Boolean);
 
   filteredPosts.sort((a, b) => (a && b ? a.timeUNIX - b.timeUNIX : 0));
 
-  return (filteredPosts as Post[]) || [];
+  return (filteredPosts as IBizPost[]) || [];
 };
 
 const highLightTokenAddress = (text: string, pattern: string): string => {
@@ -198,17 +198,17 @@ const highLightTokenAddress = (text: string, pattern: string): string => {
 
 // Reading from file
 
-// const oldFilteredPosts: Post[] = JSON.parse(await Deno.readTextFile("./src/data/biz.json")).posts.slice(-5);
-// const transformedPosts: Post[] = oldFilteredPosts.map((post: any) => ({
+// const oldFilteredPosts: IBizPost[] = JSON.parse(await Deno.readTextFile("./src/data/biz.json")).posts.slice(-5);
+// const transformedPosts: IBizPost[] = oldFilteredPosts.map((IBizPost: any) => ({
 //   threadId: 0, // Set a default or derive from other properties if available
-//   postId: Number(post.postId), // Convert postId to number
-//   time: post.dateTime,
-//   timeUNIX: Number(post.dateUTC), // Convert dateUTC to number
-//   link: post.postLink,
+//   postId: Number(IBizPost.postId), // Convert postId to number
+//   time: IBizPost.dateTime,
+//   timeUNIX: Number(IBizPost.dateUTC), // Convert dateUTC to number
+//   link: IBizPost.postLink,
 //   capcode: "", // Set to empty if unavailable
-//   name: post.userId || "", // Use userId or empty if missing
-//   filename: post.postFileText || "", // Use postFileText
-//   comment: post.postMessage, // Use postMessage as comment
+//   name: IBizPost.userId || "", // Use userId or empty if missing
+//   filename: IBizPost.postFileText || "", // Use postFileText
+//   comment: IBizPost.postMessage, // Use postMessage as comment
 // }));
 // const filteredPosts = await filterPosts(transformedPosts);
 

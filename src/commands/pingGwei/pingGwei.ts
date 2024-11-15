@@ -1,13 +1,12 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel } from "discord.js";
 import logger from "../../common/logger.js";
-import fs from "fs-extra";
-import { GweiThreshold } from "../../common/types.js";
-
-const CONFIG_FILE_PATH = "src/data/gweiThresholds.json";
+import { IGweiRequest } from "../../common/types.js";
+import { createGweiRequest } from "../../services/gweiRequestService.js";
+import { createCommandLog } from "../../services/commandLogsService.js";
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("ping-gwei")
+    .setName("dev-ping-gwei")
     .setDescription("I will ping you when the gas price is below a certain threshold.")
     .addNumberOption((option) => option.setName("gwei").setDescription("Specify the gwei value").setRequired(true))
     .addStringOption((option) =>
@@ -17,8 +16,6 @@ export default {
   async execute(interaction: ChatInputCommandInteraction) {
     const gwei = interaction.options.getNumber("gwei", true);
     const mentions = interaction.options.getString("notify", false) || "";
-    await interaction.reply(`Started monitoring! I will ping you when the gas price is below ${gwei} gwei .`);
-    console.log(mentions);
 
     try {
       const usersToNotify = mentions
@@ -28,24 +25,16 @@ export default {
             .filter((v) => v !== "")
         : [];
 
-      const threshold: GweiThreshold = {
+      const gweiRequest: IGweiRequest = {
         value: gwei,
-        user: interaction.user.id,
-        channel: interaction.channelId,
+        userId: interaction.user.id,
+        channelId: interaction.channelId,
         usersToNotify: usersToNotify,
-        createdAt: new Date(),
-        finishedAt: undefined,
         active: true,
       };
 
-      const existingData: GweiThreshold[] = fs.existsSync(CONFIG_FILE_PATH)
-        ? JSON.parse(fs.readFileSync(CONFIG_FILE_PATH, "utf-8"))
-        : [];
-
-      existingData.push(threshold);
-
-      // Write the updated data back to the file
-      fs.writeFileSync(CONFIG_FILE_PATH, JSON.stringify(existingData, null, 2));
+      const isCreated = await createGweiRequest(gweiRequest);
+      if (isCreated) interaction.reply(`I will ping you when the gas price is below ${gwei} gwei.`);
     } catch (error) {
       logger.error("Error while writing to file:", error);
       if (interaction.channel instanceof TextChannel) {

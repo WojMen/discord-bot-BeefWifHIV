@@ -12,7 +12,10 @@ import {
 } from "discord.js";
 import logger from "./common/logger.js";
 import dotenv from "dotenv";
-import startEthGweiMonitoring from "./commands/monitorETHGwei/startEthGweiMonitoring.js";
+import startEthGweiMonitoring from "./commands/pingGwei/startEthGweiMonitoring.js";
+
+import { initDatabase } from "./database/db.js";
+import { getCommandLogs, getCommandLogsAll } from "./services/commandLogsService.js";
 
 // Load environment variables
 dotenv.config({ path: ".env" });
@@ -102,6 +105,8 @@ client.once(Events.ClientReady, async (readyClient) => {
   startEthGweiMonitoring(client);
   console.log(`Starting ping gwei thresholds`);
 
+  await initDatabase();
+
   const lastCommandData = fs.existsSync(CONFIG_FILE_PATH) ? JSON.parse(fs.readFileSync(CONFIG_FILE_PATH, "utf-8")) : {};
 
   console.log("Restarting previous commands...");
@@ -109,22 +114,72 @@ client.once(Events.ClientReady, async (readyClient) => {
 
   // #TODO
   // add interface for last commands to rerun after restart
-  // lastCommandsData.forEach(async (lastCommandData: { channelId: string; commandName: string; seconds: number }) => {
 
-  if (lastCommandData && lastCommandData.channelId && lastCommandData.commandName) {
-    const channel = await client.channels.fetch(lastCommandData.channelId);
-    const command = client.commands.get(lastCommandData.commandName);
+  const activeCommands = await getCommandLogsAll();
+
+  activeCommands.forEach(async (activeCommand) => {
+    const channel = await client.channels.fetch(activeCommand.channelId);
+    const command = client.commands.get(activeCommand.name);
 
     if (!(channel instanceof TextChannel) || !command) return;
 
-    console.log(`Restarting get-biz-posts in channel: ${channel.id}`);
+    console.log(`Restarting command ${activeCommand.name} in channel: ${channel.id}`);
+
+    console.log(activeCommand.parameters);
 
     command.execute({
       channel,
-      options: { getNumber: () => lastCommandData.seconds },
+      options: {
+        getString(name: string, required: boolean = false): string | undefined {
+          const value = activeCommand.parameters[name];
+          if (required && value === undefined) {
+            throw new Error(`Missing required string parameter: ${name}`);
+          }
+          return typeof value === "string" ? value : undefined;
+        },
+        getNumber(name: string, required: boolean = false): number | undefined {
+          const value = activeCommand.parameters[name];
+          if (required && value === undefined) {
+            throw new Error(`Missing required number parameter: ${name}`);
+          }
+          return typeof value === "number" ? value : undefined;
+        },
+        getBoolean(name: string, required: boolean = false): boolean | undefined {
+          const value = activeCommand.parameters[name];
+          if (required && value === undefined) {
+            throw new Error(`Missing required boolean parameter: ${name}`);
+          }
+          return typeof value === "boolean" ? value : undefined;
+        },
+        get(name: string, required: boolean = false): any {
+          // A generic get method if you don't know the exact type
+          const value = activeCommand.parameters[name];
+          if (required && value === undefined) {
+            throw new Error(`Missing required parameter: ${name}`);
+          }
+          return value;
+        },
+      },
       reply: async (message: string) => channel.send(message),
     } as unknown as ChatInputCommandInteraction);
-  }
+  });
+
+  // lastCommandsData.forEach(async (lastCommandData: { channelId: string; commandName: string; seconds: number }) => {
+
+  // if (lastCommandData && lastCommandData.channelId && lastCommandData.commandName) {
+  //   const channel = await client.channels.fetch(lastCommandData.channelId);
+  //   const command = client.commands.get(lastCommandData.commandName);
+
+  //   if (!(channel instanceof TextChannel) || !command) return;
+
+  //   console.log(`Restarting get-biz-posts in channel: ${channel.id}`);
+
+  //   command.execute({
+  //     channel,
+  //     options: { getNumber: () => lastCommandData.seconds },
+  //     reply: async (message: string) => channel.send(message),
+  //   } as unknown as ChatInputCommandInteraction);
+  // }
   // });
 });
 

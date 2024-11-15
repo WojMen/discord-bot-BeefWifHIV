@@ -5,15 +5,24 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs-extra";
 import logger from "../../common/logger.js";
-import { Post } from "../../common/types.js";
+import { IBizPost } from "../../common/types.js";
+import {
+  createCommandLog,
+  getChannelCommandLogs,
+  getCommandLogs,
+  updateCommandLog,
+} from "../../services/commandLogsService.js";
+import { CommandLog } from "../../database/models/commandLog.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const LAST_COMMAND_FILE = path.join(__dirname, "../../data/lastCommand.json");
 
+const COMMAND_NAME = "dev-get-biz-posts";
+
 export default {
   data: new SlashCommandBuilder()
-    .setName("get-biz-posts")
+    .setName(COMMAND_NAME)
     .setDescription('Starts sending messages from /biz/ to this channel until "stop".')
     .addNumberOption((option) =>
       option
@@ -26,14 +35,26 @@ export default {
     const seconds = interaction.options.getNumber("seconds", false) || 900;
     await interaction.reply("Started looking! I will send messages from /biz/ until you say `stop`.");
 
-    const commandData = {
-      channelId: interaction.channelId,
-      commandName: "get-biz-posts",
-      seconds: seconds,
-      date: new Date().toLocaleString(),
-    };
+    console.log(interaction.channelId);
 
-    fs.writeFileSync(LAST_COMMAND_FILE, JSON.stringify(commandData, null, 2));
+    const resumeCommand = await getChannelCommandLogs(interaction.channelId, COMMAND_NAME);
+
+    let commandData: CommandLog | [] = resumeCommand[0];
+
+    if (commandData === undefined) {
+      commandData = await createCommandLog({
+        name: COMMAND_NAME,
+        userId: interaction.user.id,
+        channelId: interaction.channelId,
+        parameters: { seconds: seconds },
+        active: true,
+      });
+
+      if (!(commandData instanceof CommandLog)) {
+        logger.error("Error while creating command log.");
+        return;
+      }
+    }
 
     let lastMessage: Message | null = null;
     let counter = 20;
@@ -50,8 +71,7 @@ export default {
 
           if (postTime > minPostTime) {
             minPostTime = postTime;
-            commandData.seconds = minPostTime;
-            fs.writeFileSync(LAST_COMMAND_FILE, JSON.stringify(commandData, null, 2));
+            await updateCommandLog(commandData.id, { seconds: minPostTime });
           }
 
           counter = 0;
@@ -94,7 +114,7 @@ async function sendAavaiblePosts(
   interaction: ChatInputCommandInteraction,
   lastMessage: Message | null
 ): Promise<[number, Message | null]> {
-  const newPosts: Post[] = await getNewFilteredPosts(seconds);
+  const newPosts: IBizPost[] = await getNewFilteredPosts(seconds);
 
   if (newPosts.length === 0) {
     if (!lastMessage) return [seconds, lastMessage];

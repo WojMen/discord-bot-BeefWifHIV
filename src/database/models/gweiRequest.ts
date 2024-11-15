@@ -1,12 +1,12 @@
-import { ICommandLog } from "../../common/types.js";
+import { IGweiRequest } from "../../common/types.js";
 import { DataTypes, Model, CreationOptional } from "sequelize";
 import { sequelize } from "../db.js";
 
-export class CommandLog extends Model<ICommandLog> implements ICommandLog {
-  declare name: string;
+export class GweiRequest extends Model<IGweiRequest> implements IGweiRequest {
+  declare value: number;
   declare channelId: string;
   declare userId: string;
-  declare parameters: Record<string, any>;
+  declare usersToNotify?: string[] | null;
   declare active: boolean;
 
   declare id: CreationOptional<number>;
@@ -14,16 +14,12 @@ export class CommandLog extends Model<ICommandLog> implements ICommandLog {
   declare updatedAt: CreationOptional<Date>;
 }
 
-CommandLog.init(
+GweiRequest.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
     },
     channelId: {
       type: DataTypes.STRING,
@@ -33,9 +29,13 @@ CommandLog.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    parameters: {
-      type: DataTypes.JSON,
+    value: {
+      type: DataTypes.FLOAT,
       allowNull: false,
+    },
+    usersToNotify: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
     active: {
       type: DataTypes.BOOLEAN,
@@ -47,7 +47,7 @@ CommandLog.init(
   },
   {
     sequelize,
-    modelName: "CommandLogs",
-    tableName: "commands_logs",
+    modelName: "GweiRequest",
+    tableName: "gwei_requests",
   }
 );

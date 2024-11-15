@@ -31,20 +31,6 @@ export interface Pattern {
   label: string;
 }
 
-export interface IBizPost {
-  threadId: number;
-  postId: number;
-  time: string;
-  timeUNIX: number;
-  link: string;
-  capcode: string;
-  name: string;
-  filename: string;
-  comment: string;
-  matchedKeyWords?: string[];
-  matchedPatterns?: string[];
-}
-
 export type GweiThreshold = {
   value: number;
   user: string;
@@ -61,6 +47,20 @@ interface IBaseModel {
   updatedAt?: CreationOptional<Date>;
 }
 
+export interface IBizPost extends IBaseModel {
+  threadId: number;
+  postId: number;
+  time: string;
+  timeUNIX: number;
+  link: string;
+  capcode: string;
+  name: string;
+  filename: string;
+  comment: string;
+  matchedKeyWords?: string[];
+  matchedPatterns?: string[];
+}
+
 export type IUserCreationAttributes = Omit<IUser, "id" | "createdAt" | "updatedAt"> & {
   description?: string; // Ensures `description` defaults to `string`
 };
@@ -72,7 +72,7 @@ export interface IUser extends IBaseModel {
   usage_count?: number;
 }
 
-export interface ICommandLog {
+export interface ICommandLog extends IBaseModel {
   name: string;
   channelId: string;
   userId: string;
@@ -80,9 +80,17 @@ export interface ICommandLog {
   active: boolean;
 }
 
-export interface IGeneralAPI {
+export interface IGeneralAPI extends IBaseModel {
   type: number;
   response: any;
   value: any;
   error: string;
+}
+
+export interface IGweiRequest extends IBaseModel {
+  value: number;
+  userId: string;
+  channelId: string;
+  usersToNotify?: string[] | null;
+  active: boolean;
 }

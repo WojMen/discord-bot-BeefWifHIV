@@ -1,5 +1,5 @@
-import { DataTypes, Model } from "sequelize";
 import { IGeneralAPI } from "../../common/types.js";
+import { DataTypes, Model, CreationOptional } from "sequelize";
 import { sequelize } from "../db.js";
 
 export class GeneralAPI extends Model<IGeneralAPI> implements IGeneralAPI {
@@ -7,10 +7,19 @@ export class GeneralAPI extends Model<IGeneralAPI> implements IGeneralAPI {
   declare response: any;
   declare value: any;
   declare error: string;
+
+  declare id: CreationOptional<number>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 GeneralAPI.init(
   {
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     type: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -27,10 +36,12 @@ GeneralAPI.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
   },
   {
     sequelize,
-    modelName: "CommandLogs",
-    tableName: "commands_logs",
+    modelName: "GeneralAPI",
+    tableName: "general_api",
   }
 );

@@ -16,17 +16,9 @@ export class User extends Model<IUser, IUserCreationAttributes> implements IUser
 User.init(
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
     },
     name: {
       type: DataTypes.STRING,
@@ -46,6 +38,8 @@ User.init(
       defaultValue: 0,
       allowNull: false,
     },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
   },
   {
     sequelize,

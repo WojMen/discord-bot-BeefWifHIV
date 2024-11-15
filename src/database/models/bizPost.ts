@@ -1,5 +1,5 @@
-import { DataTypes, Model } from "sequelize";
 import { IBizPost } from "../../common/types.js";
+import { DataTypes, Model, CreationOptional } from "sequelize";
 import { sequelize } from "../db.js";
 
 export class BizPost extends Model<IBizPost> implements IBizPost {
@@ -14,10 +14,19 @@ export class BizPost extends Model<IBizPost> implements IBizPost {
   declare comment: string;
   declare matchedKeyWords: string[];
   declare matchedPatterns: string[];
+
+  declare id: CreationOptional<number>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 BizPost.init(
   {
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     threadId: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -62,6 +71,8 @@ BizPost.init(
       type: DataTypes.JSON,
       allowNull: true,
     },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
   },
   {
     sequelize,

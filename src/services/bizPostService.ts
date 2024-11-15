@@ -24,3 +24,17 @@ export const getPosts = async (timeUnix: number) => {
     logger.error(`Error getting posts: ${error}`);
   }
 };
+
+export const getPost = async (postId: number) => {
+  try {
+    const posts = await BizPost.findAll({
+      where: {
+        timeUNIX: { [Op.eq]: postId },
+      },
+    });
+
+    return posts;
+  } catch (error) {
+    logger.error(`Error getting posts: ${error}`);
+  }
+};
